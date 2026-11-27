@@ -1,433 +1,570 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Đăng ký Tình nguyện viên | Bản đồ Cứu trợ &amp; Kết nối Cộng đồng</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/volunteer.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký Tình Nguyện Viên - Community Rescue Map</title>
+    <!-- CSS dùng chung của hệ thống -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Đoạn CSS bổ sung chuyên biệt cho Form Tình Nguyện Viên & Danh Sách Đăng Ký -->
+    <style>
+        .volunteer-page-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        /* ------------------ PHẦN 1: FORM ĐĂNG KÝ HIỆN ĐẠI ------------------ */
+        .volunteer-form-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2.25rem;
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .vol-header-box {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .vol-header-box h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .vol-header-box p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 0.35rem;
+        }
+
+        .vol-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.35rem;
+        }
+
+        .vol-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .vol-form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .vol-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .vol-label .required-star {
+            color: var(--color-medical);
+        }
+
+        .vol-input, .vol-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: #ffffff;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+
+        .vol-input:focus, .vol-select:focus {
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Viền đỏ khi lỗi validation */
+        .vol-input.has-error, .vol-select.has-error {
+            border-color: var(--color-medical) !important;
+            background-color: #fff5f5;
+        }
+
+        /* Dòng thông báo lỗi màu đỏ ngay dưới ô nhập */
+        .error-message {
+            color: var(--color-medical);
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-height: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 2px;
+        }
+
+        /* Nhóm Checkbox chọn Khả năng hỗ trợ */
+        .skills-checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.85rem;
+            margin-top: 0.35rem;
+        }
+
+        .checkbox-card {
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            cursor: pointer;
+            background: #ffffff;
+            transition: all var(--transition-fast);
+            user-select: none;
+        }
+
+        .checkbox-card:hover {
+            border-color: var(--color-primary-light);
+            background-color: var(--bg-card-alt);
+        }
+
+        .checkbox-card.selected {
+            border-color: var(--color-primary);
+            background-color: #eff6ff;
+        }
+
+        .checkbox-card input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin-top: 2px;
+            accent-color: var(--color-primary);
+        }
+
+        .checkbox-card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .checkbox-card-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .checkbox-card-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-submit-volunteer {
+            background-color: var(--color-primary);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.05rem;
+            padding: 0.9rem 1.5rem;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 10px rgba(30, 58, 138, 0.25);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-submit-volunteer:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(30, 58, 138, 0.35);
+        }
+
+        /* Banner thông báo đăng ký thành công (Mượt mà và tự ẩn sau 3 giây) */
+        .toast-success-banner {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: #065f46;
+            color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            z-index: 9999;
+            border-left: 5px solid #34d399;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-success-banner.show {
+            display: flex;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ------------------ PHẦN 2: DANH SÁCH TÌNH NGUYỆN VIÊN ĐÃ ĐĂNG KÝ ------------------ */
+        .registered-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .registered-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .registered-header h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .registered-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .volunteer-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1rem;
+            border-top: 4px solid var(--color-primary-light);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .volunteer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .vol-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .vol-card-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .vol-card-area {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .vol-skills-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .skill-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-full);
+            background-color: #eff6ff;
+            color: var(--color-primary);
+            border: 1px solid #bfdbfe;
+        }
+
+        .vol-card-contacts {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .vol-contact-link {
+            color: var(--color-primary);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .vol-contact-link:hover {
+            text-decoration: underline;
+        }
+
+        .vol-time-tag {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 0.25rem;
+        }
+
+        .empty-volunteers-box {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+            background-color: var(--bg-card);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            color: var(--text-muted);
+        }
+
+        /* ------------------ RESPONSIVE TRÊN ĐIỆN THOẠI (<600px) ------------------ */
+        @media (max-width: 600px) {
+            .volunteer-form-card {
+                padding: 1.25rem;
+            }
+
+            .vol-form-grid {
+                grid-template-columns: 1fr; /* 1 cột trên điện thoại */
+                gap: 1rem;
+            }
+
+            .skills-checkbox-grid {
+                grid-template-columns: 1fr; /* Checkbox xếp dọc */
+            }
+
+            .registered-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toast-success-banner {
+                left: 16px;
+                right: 16px;
+                top: 16px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <!-- Thanh Navbar chung -->
-  <header class="navbar">
-    <div class="container nav-container">
-      <a href="index.html" class="nav-brand" aria-label="Trang chủ Bản đồ Cứu trợ">
-        <span class="brand-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 21s-6-4.35-6-10a6 6 0 1 1 12 0c0 5.65-6 10-6 10Z" />
-            <path d="M12 8v5" />
-            <path d="M9.5 10.5h5" />
-          </svg>
-        </span>
-        <span class="brand-text">
-          <span class="brand-title">Bản đồ Cứu trợ</span>
-          <span class="brand-subtitle">Kết nối Cộng đồng</span>
-        </span>
-      </a>
 
-      <button
-        type="button"
-        class="nav-toggle"
-        id="navToggle"
-        aria-label="Mở menu điều hướng"
-        aria-expanded="false"
-        aria-controls="navLinks"
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
+    <!-- 1. THANH ĐIỀU HƯỚNG (NAVBAR ĐỒNG BỘ VỚI INDEX.HTML & REQUESTS.HTML) -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">🆘</span>
+                <span>RescueMap</span>
+            </a>
+            <nav class="nav-menu" aria-label="Điều hướng chính">
+                <a href="index.html" class="nav-link">Trang chủ</a>
+                <a href="requests.html" class="nav-link">Danh sách yêu cầu</a>
+                <a href="volunteer.html" class="nav-link active">Đăng ký tình nguyện viên</a>
+            </nav>
+        </div>
+    </header>
 
-      <nav aria-label="Điều hướng chính">
-        <ul class="nav-links" id="navLinks">
-          <li><a href="index.html" class="nav-link">Trang chủ</a></li>
-          <li><a href="index.html#map" class="nav-link">Bản đồ cứu trợ</a></li>
-          <li><a href="request.html" class="nav-link">Yêu cầu hỗ trợ</a></li>
-          <li><a href="volunteer.html" class="nav-link active" aria-current="page">Tình nguyện viên</a></li>
-        </ul>
-      </nav>
+    <!-- 2. KHUNG NỘI DUNG CHÍNH (MAIN WRAPPER) -->
+    <main class="main-wrapper">
+        <header class="page-header">
+            <h1 class="page-title">Đăng Ký Tham Gia Mạng Lưới Cứu Trợ</h1>
+            <p class="page-subtitle">Chung tay cùng cộng đồng hỗ trợ người dân gặp nạn, ứng phó thiên tai lũ lụt và cung cấp nhu yếu phẩm kịp thời tại tỉnh Đồng Nai.</p>
+        </header>
+
+        <div class="volunteer-page-layout">
+            
+            <!-- ================= PHẦN 1: FORM ĐĂNG KÝ TÌNH NGUYỆN VIÊN ================= -->
+            <section class="volunteer-form-card" aria-label="Form đăng ký tình nguyện viên">
+                <div class="vol-header-box">
+                    <h2>🤝 Thông Tin Tình Nguyện Viên / Tổ Chức</h2>
+                    <p>Hãy để lại thông tin để ban điều phối kết nối với bạn khi có trường hợp cần cứu trợ gần khu vực.</p>
+                </div>
+
+                <form id="volunteerForm" novalidate>
+                    <div class="vol-form-grid">
+                        
+                        <!-- Họ tên / Tên tổ chức -->
+                        <div class="vol-form-group">
+                            <label class="vol-label" for="volName">
+                                Họ tên / Tên tổ chức cứu trợ <span class="required-star">*</span>
+                            </label>
+                            <input type="text" id="volName" class="vol-input" placeholder="Ví dụ: Đội Cứu Trợ Biên Hòa hoặc Lê Hoàng Nam" autocomplete="name">
+                            <small class="error-message" id="nameError"></small>
+                        </div>
+
+                        <!-- Số điện thoại (Bắt buộc 10 chữ số bắt đầu bằng 0) -->
+                        <div class="vol-form-group">
+                            <label class="vol-label" for="volPhone">
+                                Số điện thoại liên hệ <span class="required-star">*</span>
+                            </label>
+                            <input type="tel" id="volPhone" class="vol-input" placeholder="Ví dụ: 0912345678 (10 số)" maxlength="10" autocomplete="tel">
+                            <small class="error-message" id="phoneError"></small>
+                        </div>
+
+                        <!-- Email (Bắt buộc đúng định dạng email) -->
+                        <div class="vol-form-group">
+                            <label class="vol-label" for="volEmail">
+                                Địa chỉ Email <span class="required-star">*</span>
+                            </label>
+                            <input type="email" id="volEmail" class="vol-input" placeholder="Ví dụ: hotro.dongnai@gmail.com" autocomplete="email">
+                            <small class="error-message" id="emailError"></small>
+                        </div>
+
+                        <!-- Khu vực có thể hỗ trợ -->
+                        <div class="vol-form-group">
+                            <label class="vol-label" for="volArea">
+                                Khu vực có thể hỗ trợ tại Đồng Nai <span class="required-star">*</span>
+                            </label>
+                            <select id="volArea" class="vol-select">
+                                <option value="">-- Chọn Quận / Huyện phụ trách --</option>
+                                <option value="Toàn tỉnh Đồng Nai">🌐 Toàn tỉnh Đồng Nai</option>
+                                <option value="TP. Biên Hòa">TP. Biên Hòa</option>
+                                <option value="TP. Long Khánh">TP. Long Khánh</option>
+                                <option value="Huyện Vĩnh Cửu">Huyện Vĩnh Cửu</option>
+                                <option value="Huyện Nhơn Trạch">Huyện Nhơn Trạch</option>
+                                <option value="Huyện Long Thành">Huyện Long Thành</option>
+                                <option value="Huyện Trảng Bom">Huyện Trảng Bom</option>
+                                <option value="Huyện Thống Nhất">Huyện Thống Nhất</option>
+                                <option value="Huyện Định Quán">Huyện Định Quán</option>
+                                <option value="Huyện Tân Phú">Huyện Tân Phú</option>
+                                <option value="Huyện Cẩm Mỹ">Huyện Cẩm Mỹ</option>
+                                <option value="Huyện Xuân Lộc">Huyện Xuân Lộc</option>
+                            </select>
+                            <small class="error-message" id="areaError"></small>
+                        </div>
+
+                        <!-- Nhóm Checkbox chọn Khả năng hỗ trợ (Bắt buộc chọn ít nhất 1) -->
+                        <div class="vol-form-group full-width">
+                            <label class="vol-label">
+                                Khả năng bạn / tổ chức có thể hỗ trợ (Chọn ít nhất 1 mục) <span class="required-star">*</span>
+                            </label>
+                            
+                            <div class="skills-checkbox-grid">
+                                
+                                <!-- Khả năng 1: Vận chuyển -->
+                                <label class="checkbox-card" id="label-vc">
+                                    <input type="checkbox" name="skills" value="Vận chuyển" id="skill-vc">
+                                    <div class="checkbox-card-content">
+                                        <span class="checkbox-card-title">🚚 Vận chuyển</span>
+                                        <span class="checkbox-card-desc">Xe bán tải, xe tải, xuồng/ghe cơ động cứu hộ</span>
+                                    </div>
+                                </label>
+
+                                <!-- Khả năng 2: Hỗ trợ y tế -->
+                                <label class="checkbox-card" id="label-yt">
+                                    <input type="checkbox" name="skills" value="Hỗ trợ y tế" id="skill-yt">
+                                    <div class="checkbox-card-content">
+                                        <span class="checkbox-card-title">🩺 Hỗ trợ y tế</span>
+                                        <span class="checkbox-card-desc">Bác sĩ, y tá, sơ cấp cứu, túi thuốc khẩn cấp</span>
+                                    </div>
+                                </label>
+
+                                <!-- Khả năng 3: Cung cấp nhu yếu phẩm -->
+                                <label class="checkbox-card" id="label-nyp">
+                                    <input type="checkbox" name="skills" value="Cung cấp nhu yếu phẩm" id="skill-nyp">
+                                    <div class="checkbox-card-content">
+                                        <span class="checkbox-card-title">🍞 Cung cấp nhu yếu phẩm</span>
+                                        <span class="checkbox-card-desc">Lương thực, mì tôm, nước đóng chai, áo phao</span>
+                                    </div>
+                                </label>
+
+                                <!-- Khả năng 4: Chỗ ở tạm thời -->
+                                <label class="checkbox-card" id="label-no">
+                                    <input type="checkbox" name="skills" value="Chỗ ở tạm thời" id="skill-no">
+                                    <div class="checkbox-card-content">
+                                        <span class="checkbox-card-title">🏠 Chỗ ở tạm thời</span>
+                                        <span class="checkbox-card-desc">Mặt bằng, nhà trọ, hỗ trợ người dân di dời tránh bão</span>
+                                    </div>
+                                </label>
+
+                            </div>
+                            <small class="error-message" id="skillsError"></small>
+                        </div>
+
+                        <!-- Nút gửi Form -->
+                        <div class="vol-form-group full-width" style="margin-top: 0.5rem;">
+                            <button type="submit" class="btn-submit-volunteer" id="btnSubmitVolunteer">
+                                🤝 ĐĂNG KÝ THAM GIA TÌNH NGUYỆN VIÊN
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+            </section>
+
+            <!-- ================= PHẦN 2: DANH SÁCH TÌNH NGUYỆN VIÊN VỪA ĐĂNG KÝ ================= -->
+            <section class="registered-section" aria-label="Danh sách tình nguyện viên đã đăng ký">
+                <div class="registered-header">
+                    <h3>👥 Tình Nguyện Viên Đã Đăng Ký</h3>
+                    <span class="badge badge-default" id="volunteersCountBadge" style="font-size: 0.85rem; background: #e2e8f0; color: #1e293b;">
+                        0 tình nguyện viên
+                    </span>
+                </div>
+
+                <!-- Danh sách Card các tình nguyện viên lấy từ localStorage (key: volunteers) -->
+                <div class="registered-grid" id="volunteersContainer">
+                    <!-- JavaScript sẽ tự động render các thẻ tại đây -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- 3. FOOTER (ĐỒNG BỘ VỚI CÁC TRANG CÒN LẠI) -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <h4>🆘 Bản đồ Cứu trợ & Kết nối Cộng đồng</h4>
+                    <p>Hệ thống hỗ trợ cứu hộ nhân đạo - Kết nối thông suốt giữa người dân và đội ngũ tình nguyện viên.</p>
+                </div>
+                <div class="footer-hotline">
+                    <span>Đường dây nóng cứu hộ</span>
+                    <strong>1800 6688</strong>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Community Rescue Map. Phát triển vì cộng đồng.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Banner Toast thông báo đăng ký thành công (Tự động ẩn sau 3 giây) -->
+    <div class="toast-success-banner" id="toastSuccessBanner">
+        <span style="font-size: 1.3rem;">🎉</span>
+        <span id="toastMsgText">Đăng ký tình nguyện viên thành công! Cảm ơn tấm lòng của bạn.</span>
     </div>
-  </header>
 
-  <main>
-    <!-- Banner tiêu đề -->
-    <section class="volunteer-hero">
-      <div class="container">
-        <div class="hero-badge">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-          </svg>
-          <span>Mạng lưới Tình nguyện viên Cộng đồng</span>
-        </div>
-        <h1 class="hero-title">Đăng ký Tham gia Hỗ trợ Cứu trợ</h1>
-        <p class="hero-subtitle">
-          Kết nối nguồn lực cá nhân và tổ chức đến đúng khu vực đang cần giúp đỡ nhanh chóng, minh bạch và kịp thời.
-        </p>
-        <div class="hero-highlights">
-          <span class="hero-chip">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            Đăng ký nhanh trong 1 phút
-          </span>
-          <span class="hero-chip">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            Điều phối theo từng khu vực
-          </span>
-          <span class="hero-chip">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-            </svg>
-            Hiển thị trực tiếp danh sách kết nối
-          </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Nội dung chính: Form đăng ký & Danh sách tình nguyện viên -->
-    <section class="volunteer-section">
-      <div class="container">
-        <div class="volunteer-wrapper">
-          <!-- Form đăng ký tình nguyện viên -->
-          <div class="volunteer-card">
-            <div class="card-header">
-              <h2 class="card-title">Thông tin Đăng ký Tình nguyện viên</h2>
-              <p class="card-subtitle">
-                Vui lòng điền đầy đủ thông tin liên hệ và lựa chọn ít nhất một khả năng hỗ trợ bên dưới.
-              </p>
-            </div>
-
-            <form id="volunteerForm" class="volunteer-form" novalidate>
-              <div class="form-grid">
-                <!-- Họ tên / Tên tổ chức -->
-                <div class="form-group form-group--full" id="fullNameGroup">
-                  <label for="fullName" class="form-label">
-                    Họ tên / Tên tổ chức <span class="required-mark" aria-hidden="true">*</span>
-                  </label>
-                  <div class="input-control-wrap">
-                    <span class="input-icon" aria-hidden="true">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                    </span>
-                    <input
-                      type="text"
-                      id="fullName"
-                      name="fullName"
-                      class="form-control"
-                      placeholder="VD: Nguyễn Văn An hoặc Đội Thiện Nguyện Ánh Dương"
-                      autocomplete="name"
-                      aria-describedby="fullNameError"
-                      required
-                    />
-                  </div>
-                  <p class="error-message" id="fullNameError" aria-live="polite"></p>
-                </div>
-
-                <!-- Số điện thoại -->
-                <div class="form-group" id="phoneGroup">
-                  <label for="phone" class="form-label">
-                    Số điện thoại <span class="required-mark" aria-hidden="true">*</span>
-                  </label>
-                  <div class="input-control-wrap">
-                    <span class="input-icon" aria-hidden="true">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z" />
-                      </svg>
-                    </span>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      class="form-control"
-                      placeholder="VD: 0912345678"
-                      inputmode="numeric"
-                      maxlength="10"
-                      autocomplete="tel"
-                      aria-describedby="phoneHint phoneError"
-                      required
-                    />
-                  </div>
-                  <span class="field-hint" id="phoneHint">Định dạng 10 chữ số, bắt đầu bằng số 0</span>
-                  <p class="error-message" id="phoneError" aria-live="polite"></p>
-                </div>
-
-                <!-- Email -->
-                <div class="form-group" id="emailGroup">
-                  <label for="email" class="form-label">
-                    Email <span class="required-mark" aria-hidden="true">*</span>
-                  </label>
-                  <div class="input-control-wrap">
-                    <span class="input-icon" aria-hidden="true">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="20" height="16" x="2" y="4" rx="2" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                      </svg>
-                    </span>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      class="form-control"
-                      placeholder="VD: lienhe@congdong.vn"
-                      autocomplete="email"
-                      aria-describedby="emailError"
-                      required
-                    />
-                  </div>
-                  <p class="error-message" id="emailError" aria-live="polite"></p>
-                </div>
-
-                <!-- Khu vực có thể hỗ trợ -->
-                <div class="form-group form-group--full" id="areaGroup">
-                  <label for="area" class="form-label">
-                    Khu vực có thể hỗ trợ <span class="required-mark" aria-hidden="true">*</span>
-                  </label>
-                  <div class="input-control-wrap">
-                    <span class="input-icon" aria-hidden="true">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                    </span>
-                    <input
-                      type="text"
-                      id="area"
-                      name="area"
-                      class="form-control"
-                      list="areaSuggestions"
-                      placeholder="VD: Quận Hải Châu, Đà Nẵng hoặc Các tỉnh Miền Trung"
-                      aria-describedby="areaError"
-                      required
-                    />
-                    <datalist id="areaSuggestions">
-                      <option value="Quận 1, TP. Hồ Chí Minh"></option>
-                      <option value="TP. Thủ Đức, TP. Hồ Chí Minh"></option>
-                      <option value="Quận Hoàn Kiếm, Hà Nội"></option>
-                      <option value="Quận Cầu Giấy, Hà Nội"></option>
-                      <option value="Quận Hải Châu, Đà Nẵng"></option>
-                      <option value="TP. Huế, Thừa Thiên Huế"></option>
-                      <option value="TP. Đồng Hới, Quảng Bình"></option>
-                      <option value="TP. Cần Thơ"></option>
-                    </datalist>
-                  </div>
-                  <p class="error-message" id="areaError" aria-live="polite"></p>
-                </div>
-
-                <!-- Nhóm Checkbox Khả năng hỗ trợ -->
-                <div class="form-group form-group--full" id="capabilitiesWrapper">
-                  <span class="form-label" id="capabilitiesLabel">
-                    Khả năng hỗ trợ <span class="required-mark" aria-hidden="true">*</span>
-                  </span>
-                  <div
-                    class="checkbox-grid"
-                    id="capabilitiesGroup"
-                    role="group"
-                    aria-labelledby="capabilitiesLabel"
-                    aria-describedby="capabilitiesError"
-                  >
-                    <label class="checkbox-card">
-                      <input type="checkbox" class="checkbox-input" name="capabilities" value="Vận chuyển" />
-                      <span class="checkbox-box">
-                        <span class="checkbox-indicator" aria-hidden="true">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </span>
-                        <span class="checkbox-meta">
-                          <span class="checkbox-title-row">
-                            <span class="checkbox-icon" aria-hidden="true">
-                              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M10 17h4V5H2v12h3" />
-                                <path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" />
-                                <circle cx="7.5" cy="17.5" r="2.5" />
-                                <circle cx="17.5" cy="17.5" r="2.5" />
-                              </svg>
-                            </span>
-                            <span>Vận chuyển</span>
-                          </span>
-                          <span class="checkbox-desc">Xe máy, ô tô, xe tải chở hàng hóa hoặc đưa đón</span>
-                        </span>
-                      </span>
-                    </label>
-
-                    <label class="checkbox-card">
-                      <input type="checkbox" class="checkbox-input" name="capabilities" value="Hỗ trợ y tế" />
-                      <span class="checkbox-box">
-                        <span class="checkbox-indicator" aria-hidden="true">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </span>
-                        <span class="checkbox-meta">
-                          <span class="checkbox-title-row">
-                            <span class="checkbox-icon" aria-hidden="true">
-                              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2Z" />
-                              </svg>
-                            </span>
-                            <span>Hỗ trợ y tế</span>
-                          </span>
-                          <span class="checkbox-desc">Sơ cứu, cấp thuốc, tư vấn chăm sóc sức khỏe</span>
-                        </span>
-                      </span>
-                    </label>
-
-                    <label class="checkbox-card">
-                      <input type="checkbox" class="checkbox-input" name="capabilities" value="Cung cấp nhu yếu phẩm" />
-                      <span class="checkbox-box">
-                        <span class="checkbox-indicator" aria-hidden="true">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </span>
-                        <span class="checkbox-meta">
-                          <span class="checkbox-title-row">
-                            <span class="checkbox-icon" aria-hidden="true">
-                              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                                <path d="m3.3 7 8.7 5 8.7-5" />
-                                <path d="M12 22V12" />
-                              </svg>
-                            </span>
-                            <span>Cung cấp nhu yếu phẩm</span>
-                          </span>
-                          <span class="checkbox-desc">Lương thực, nước sạch, quần áo, đèn pin, áo phao</span>
-                        </span>
-                      </span>
-                    </label>
-
-                    <label class="checkbox-card">
-                      <input type="checkbox" class="checkbox-input" name="capabilities" value="Chỗ ở tạm thời" />
-                      <span class="checkbox-box">
-                        <span class="checkbox-indicator" aria-hidden="true">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </span>
-                        <span class="checkbox-meta">
-                          <span class="checkbox-title-row">
-                            <span class="checkbox-icon" aria-hidden="true">
-                              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-                                <polyline points="9 22 9 12 15 12 15 22" />
-                              </svg>
-                            </span>
-                            <span>Chỗ ở tạm thời</span>
-                          </span>
-                          <span class="checkbox-desc">Điểm lưu trú an toàn, nơi tránh trú ngắn hạn</span>
-                        </span>
-                      </span>
-                    </label>
-                  </div>
-                  <p class="error-message" id="capabilitiesError" aria-live="polite"></p>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button type="submit" class="btn-submit">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="8.5" cy="7" r="4" />
-                    <line x1="20" y1="8" x2="20" y2="14" />
-                    <line x1="23" y1="11" x2="17" y2="11" />
-                  </svg>
-                  <span>Đăng ký Tình nguyện viên</span>
-                </button>
-              </div>
-
-              <!-- Thông báo đăng ký thành công mượt mà (tự ẩn sau 3 giây) -->
-              <div id="successAlert" class="success-alert" role="status" aria-live="polite" aria-hidden="true">
-                <span class="success-alert-icon" aria-hidden="true">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-                <div class="success-alert-body">
-                  <strong>Đăng ký thành công!</strong>
-                  <p id="successAlertText">Thông tin tình nguyện viên đã được ghi nhận vào hệ thống.</p>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          <!-- Danh sách tình nguyện viên đã đăng ký -->
-          <section class="volunteer-list-section" aria-labelledby="volunteerListTitle">
-            <div class="list-header">
-              <div class="list-title-wrap">
-                <h2 class="list-title" id="volunteerListTitle">Danh sách Tình nguyện viên đã đăng ký</h2>
-                <span class="volunteer-count-badge" id="volunteerCount">0 tình nguyện viên</span>
-              </div>
-            </div>
-
-            <div class="filter-pills" id="capabilityFilters" role="group" aria-label="Lọc theo khả năng hỗ trợ">
-              <button type="button" class="filter-pill active" data-filter="all">Tất cả</button>
-              <button type="button" class="filter-pill" data-filter="Vận chuyển">Vận chuyển</button>
-              <button type="button" class="filter-pill" data-filter="Hỗ trợ y tế">Hỗ trợ y tế</button>
-              <button type="button" class="filter-pill" data-filter="Cung cấp nhu yếu phẩm">Cung cấp nhu yếu phẩm</button>
-              <button type="button" class="filter-pill" data-filter="Chỗ ở tạm thời">Chỗ ở tạm thời</button>
-            </div>
-
-            <div id="volunteersList" class="volunteers-grid"></div>
-          </section>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Thanh Footer chung -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div>
-          <h3 class="footer-title">Bản đồ Cứu trợ &amp; Kết nối Cộng đồng</h3>
-          <p class="footer-desc">
-            Nền tảng kết nối người cần trợ giúp với đội ngũ tình nguyện viên và các điểm hỗ trợ khẩn cấp tại địa phương.
-          </p>
-        </div>
-
-        <div>
-          <h3 class="footer-title">Điều hướng nhanh</h3>
-          <ul class="footer-links">
-            <li><a href="index.html">Trang chủ</a></li>
-            <li><a href="index.html#map">Bản đồ cứu trợ</a></li>
-            <li><a href="request.html">Gửi yêu cầu hỗ trợ</a></li>
-            <li><a href="volunteer.html">Đăng ký tình nguyện viên</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 class="footer-title">Đường dây nóng khẩn cấp</h3>
-          <div class="footer-hotline">
-            <span>Tìm kiếm cứu nạn: <strong>112</strong></span>
-            <span>Công an: <strong>113</strong> | Cứu hỏa: <strong>114</strong></span>
-            <span>Cấp cứu y tế: <strong>115</strong></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="footer-bottom">
-        <span>&copy; 2026 Bản đồ Cứu trợ &amp; Kết nối Cộng đồng.</span>
-        <span>Chung tay kết nối vì cộng đồng an toàn.</span>
-      </div>
-    </div>
-  </footer>
-
-  <script src="js/volunteer.js"></script>
+    <!-- Script xử lý Validation và LocalStorage -->
+    <script src="js/volunteer.js"></script>
 </body>
 </html>
