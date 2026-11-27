@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ Cứu trợ & Kết nối Cộng đồng</title>
+    <!-- CSS dùng chung của hệ thống -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Đoạn CSS bổ sung chuyên biệt cho Bản đồ, Marker Pulse và Popup Chi tiết -->
+    <style>
+        /* Khu vực điều khiển: Bộ lọc trạng thái & Bảng chú thích */
+        .map-controls-panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        /* 3 Nút lọc trạng thái */
+        .filter-buttons-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-right: 0.25rem;
+        }
+
+        .status-btn {
+            background: #fff;
+            border: 1.5px solid var(--border-color);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .status-btn:hover {
+            border-color: var(--color-primary-light);
+            color: var(--color-primary);
+        }
+
+        .status-btn.active {
+            background-color: var(--color-primary);
+            color: #ffffff;
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 6px rgba(30, 58, 138, 0.25);
+        }
+
+        /* Bảng chú thích 3 màu Marker */
+        .map-legend {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: var(--radius-full);
+            display: inline-block;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .legend-dot.medical {
+            background-color: var(--color-medical); /* Đỏ: #e74c3c */
+            box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3);
+        }
+
+        .legend-dot.food {
+            background-color: var(--color-food);    /* Cam: #f39c12 */
+        }
+
+        .legend-dot.shelter {
+            background-color: var(--color-shelter); /* Xanh dương: #3498db */
+        }
+
+        /* Khung bản đồ (position: relative) mô phỏng khu vực */
+        .map-wrapper {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background-color: #dbeafe;
+            background-image: 
+                radial-gradient(#93c5fd 1.5px, transparent 1.5px),
+                linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, #e2e8f0 1px);
+            background-size: 25px 25px, 50px 50px, 50px 50px;
+            border-radius: var(--radius-lg);
+            border: 2px solid #cbd5e1;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            user-select: none;
+        }
+
+        /* Sơ đồ địa giới & Sông Đồng Nai mô phỏng */
+        .map-region-backdrop {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .map-region-backdrop path.province-shape {
+            fill: #f1f5f9;
+            stroke: #94a3b8;
+            stroke-width: 2;
+            stroke-dasharray: 6 4;
+        }
+
+        .map-region-backdrop path.river-shape {
+            fill: none;
+            stroke: #38bdf8;
+            stroke-width: 5;
+            stroke-linecap: round;
+        }
+
+        .district-tag {
+            position: absolute;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Lớp chứa Marker vẽ tự động bằng JavaScript */
+        #markersLayer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Định dạng Marker */
+        .map-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            border: 3px solid #ffffff;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+            z-index: 10;
+        }
+
+        .map-marker:hover {
+            transform: translate(-50%, -50%) scale(1.3);
+            z-index: 30;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+        }
+
+        /* 3 Màu Marker theo yêu cầu */
+        .marker-medical {
+            background-color: var(--color-medical); /* Đỏ: #e74c3c */
+        }
+
+        .marker-food {
+            background-color: var(--color-food);    /* Cam: #f39c12 */
+        }
+
+        .marker-shelter {
+            background-color: var(--color-shelter); /* Xanh dương: #3498db */
+        }
+
+        /* Hiệu ứng nhấp nháy Pulse dành riêng cho Marker Y tế (Khẩn cấp) */
+        .marker-medical::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: var(--radius-full);
+            border: 3px solid var(--color-medical);
+            animation: medical-pulse 1.8s infinite ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes medical-pulse {
+            0% { transform: scale(0.9); opacity: 0.9; }
+            70% { transform: scale(2.2); opacity: 0; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+
+        /* Biểu tượng trạng thái đã cứu trợ */
+        .map-marker.is-done {
+            filter: grayscale(0.2);
+            opacity: 0.85;
+            border-color: #a7f3d0;
+        }
+
+        .map-marker .status-check {
+            position: absolute;
+            bottom: -3px;
+            right: -3px;
+            width: 16px;
+            height: 16px;
+            background-color: var(--color-done);
+            border: 2px solid #ffffff;
+            border-radius: var(--radius-full);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hộp thoại Popup Chi tiết */
+        .map-popup-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .map-popup-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 440px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            animation: popupSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .popup-header {
+            padding: 1.1rem 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-card-alt);
+        }
+
+        .popup-title-group h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .popup-id-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .popup-close-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            line-height: 1;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .popup-close-btn:hover {
+            color: var(--color-medical);
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .popup-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .popup-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .popup-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .popup-value {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .popup-phone-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            font-size: 1.05rem;
+            text-decoration: underline;
+        }
+
+        .popup-phone-link:hover {
+            color: var(--color-primary-hover);
+        }
+
+        .popup-note-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
+        .popup-badges-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.25rem;
+        }
+
+        .popup-footer {
+            padding: 0.85rem 1.25rem;
+            background: var(--bg-card-alt);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        @keyframes popupSlideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Tối ưu hóa cực hạn cho điện thoại màn hình nhỏ 375px */
+        @media (max-width: 600px) {
+            .map-controls-panel {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .filter-buttons-group {
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .status-btn {
+                flex: 1;
+                text-align: center;
+                padding: 0.45rem 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .map-legend {
+                justify-content: space-around;
+                width: 100%;
+                border-top: 1px dashed var(--border-color);
+                padding-top: 0.75rem;
+            }
+
+            .legend-item {
+                font-size: 0.78rem;
+            }
+
+            .map-wrapper {
+                height: 480px; /* Vừa vặn trên màn hình 375px */
+            }
+
+            .map-marker {
+                width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+            }
+
+            .map-popup-card {
+                max-width: 100%;
+                border-radius: var(--radius-md);
+            }
+
+            .popup-body {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. THANH NAVBAR VỚI 3 LINK THEO YÊU CẦU -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-icon">🆘</span>
+                <span>RescueMap</span>
+            </a>
+            <nav class="nav-menu" aria-label="Điều hướng chính">
+                <a href="index.html" class="nav-link active">Trang chủ</a>
+                <a href="requests.html" class="nav-link">Danh sách yêu cầu</a>
+                <a href="volunteer.html" class="nav-link">Đăng ký tình nguyện viên</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 2. KHUNG MAIN (SEMANTIC MAIN CONTAINER) -->
+    <main class="main-wrapper">
+        
+        <header class="page-header">
+            <h1 class="page-title">Bản đồ Cứu trợ & Kết nối Cộng đồng</h1>
+            <p class="page-subtitle">Hệ thống theo dõi các điểm cứu trợ khẩn cấp tại tỉnh Đồng Nai. Nhấp vào các điểm Marker trên bản đồ để xem chi tiết và liên hệ trực tiếp.</p>
+        </header>
+
+        <!-- BẢNG ĐIỀU KHIỂN: BỘ LỌC 3 NÚT & BẢNG CHÚ THÍCH 3 MÀU MARKER -->
+        <section class="map-controls-panel" aria-label="Bộ lọc và Chú thích">
+            
+            <!-- 3 Nút lọc trạng thái -->
+            <div class="filter-buttons-group">
+                <span class="filter-title">Trạng thái:</span>
+                <button class="status-btn active" data-status="all">Tất cả</button>
+                <button class="status-btn" data-status="dang-cho">Đang chờ</button>
+                <button class="status-btn" data-status="da-giup">Đã được giúp</button>
+            </div>
+
+            <!-- Bảng chú thích 3 màu Marker: Đỏ (Y tế nhấp nháy), Cam (Thực phẩm), Xanh dương (Nơi ở) -->
+            <div class="map-legend">
+                <div class="legend-item" title="Nhu cầu y tế khẩn cấp (Nhấp nháy pulse)">
+                    <span class="legend-dot medical"></span>
+                    <span>Đỏ: Y tế</span>
+                </div>
+                <div class="legend-item" title="Lương thực & Nhu yếu phẩm">
+                    <span class="legend-dot food"></span>
+                    <span>Cam: Thực phẩm</span>
+                </div>
+                <div class="legend-item" title="Chỗ ở & Trú ẩn an toàn">
+                    <span class="legend-dot shelter"></span>
+                    <span>Xanh dương: Nơi ở</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- KHUNG BẢN ĐỒ (POSITION: RELATIVE) MÔ PHỎNG KHU VỰC -->
+        <section class="map-section" aria-label="Bản đồ tương tác">
+            <div class="map-wrapper" id="mapWrapper">
+                
+                <!-- Bản đồ nền SVG mô phỏng địa bàn Đồng Nai -->
+                <svg class="map-region-backdrop" viewBox="0 0 800 600" preserveAspectRatio="none">
+                    <path class="province-shape" d="M 120 180 Q 250 80 480 90 T 700 160 T 740 380 T 560 520 T 320 540 T 160 420 Z" />
+                    <path class="river-shape" d="M 180 80 Q 220 220 280 320 T 260 500 T 360 580" />
+                </svg>
+
+                <!-- Địa danh minh họa -->
+                <span class="district-tag" style="top: 22%; left: 38%;">Vĩnh Cửu</span>
+                <span class="district-tag" style="top: 36%; left: 30%;">TP. Biên Hòa</span>
+                <span class="district-tag" style="top: 34%; left: 52%;">Trảng Bom</span>
+                <span class="district-tag" style="top: 32%; left: 66%;">Thống Nhất</span>
+                <span class="district-tag" style="top: 40%; left: 78%;">TP. Long Khánh</span>
+                <span class="district-tag" style="top: 56%; left: 48%;">Long Thành</span>
+                <span class="district-tag" style="top: 74%; left: 52%;">Nhơn Trạch</span>
+
+                <!-- Lớp hiển thị Marker (vẽ tự động bằng JavaScript .map()) -->
+                <div id="markersLayer"></div>
+
+                <!-- Hộp thoại Popup Chi tiết khi nhấp Marker -->
+                <div class="map-popup-overlay" id="popupOverlay" style="display: none;">
+                    <article class="map-popup-card" id="popupCard">
+                        <header class="popup-header">
+                            <div class="popup-title-group">
+                                <span class="popup-id-tag" id="popupId">REQ-000</span>
+                                <h3 id="popupName">Họ và tên</h3>
+                            </div>
+                            <button type="button" class="popup-close-btn" id="popupCloseBtn" aria-label="Đóng popup">&times;</button>
+                        </header>
+                        
+                        <div class="popup-body">
+                            <div class="popup-row">
+                                <span class="popup-label">📞 Số điện thoại:</span>
+                                <a href="tel:" class="popup-phone-link" id="popupPhone">0912 345 678</a>
+                            </div>
+
+                            <div class="popup-row">
+                                <span class="popup-label">📍 Địa chỉ:</span>
+                                <p class="popup-value" id="popupAddress">Địa chỉ...</p>
+                            </div>
+
+                            <div class="popup-row">
+                                <span class="popup-label">🏷️ Loại nhu cầu & Trạng thái:</span>
+                                <div class="popup-badges-row">
+                                    <span class="badge" id="popupTypeBadge">Y tế</span>
+                                    <span class="badge" id="popupStatusBadge">Đang chờ</span>
+                                </div>
+                            </div>
+
+                            <div class="popup-row">
+                                <span class="popup-label">📝 Ghi chú:</span>
+                                <div class="popup-note-box" id="popupNote">Nội dung ghi chú...</div>
+                            </div>
+                        </div>
+
+                        <footer class="popup-footer">
+                            <a href="tel:" class="btn btn-danger btn-sm" id="popupCallBtn">
+                                📞 Gọi hỗ trợ ngay
+                            </a>
+                            <button type="button" class="btn btn-outline btn-sm" id="popupCloseFooterBtn">
+                                Đóng
+                            </button>
+                        </footer>
+                    </article>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 3. FOOTER CHUẨN SEMANTIC -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <h4>🆘 Bản đồ Cứu trợ & Kết nối Cộng đồng</h4>
+                    <p>Hệ thống hỗ trợ cứu hộ nhân đạo - Kết nối thông suốt giữa người dân và đội ngũ tình nguyện viên.</p>
+                </div>
+                <div class="footer-hotline">
+                    <span>Đường dây nóng cứu hộ</span>
+                    <strong>1800 6688</strong>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Community Rescue Map. Phát triển vì cộng đồng.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Nạp js/data.js trước -->
+    <script src="js/data.js"></script>
+    <!-- Nạp js/map.js điều khiển bản đồ -->
+    <script src="js/map.js"></script>
+</body>
+</html>
