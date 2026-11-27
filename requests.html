@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yêu cầu Cứu trợ - Bản đồ Cứu trợ & Kết nối Cộng đồng</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/requests.css">
+</head>
+<body>
+
+    <!-- ===== NAVBAR (đồng bộ với index.html) ===== -->
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="index.html" class="navbar-brand">
+                <span class="brand-icon">🗺️</span>
+                <span class="brand-text">Cứu trợ & Kết nối</span>
+            </a>
+            <ul class="navbar-nav">
+                <li><a href="index.html">🏠 Trang chủ</a></li>
+                <li><a href="requests.html" class="active">📋 Yêu cầu cứu trợ</a></li>
+            </ul>
+            <button class="navbar-toggle" id="navbarToggle" aria-label="Mở menu">
+                ☰
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== NỘI DUNG CHÍNH ===== -->
+    <main class="container main-content">
+
+        <!-- ===== PHẦN 1: FORM GỬI YÊU CẦU ===== -->
+        <section class="section form-section">
+            <h2 class="section-title">📝 Gửi yêu cầu cứu trợ mới</h2>
+            <form id="requestForm" class="request-form" novalidate>
+
+                <!-- Họ tên -->
+                <div class="form-group">
+                    <label for="fullName">Họ và tên <span class="required">*</span></label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Nguyễn Văn A">
+                    <span class="error-message" id="fullNameError"></span>
+                </div>
+
+                <!-- Số điện thoại -->
+                <div class="form-group">
+                    <label for="phone">Số điện thoại <span class="required">*</span></label>
+                    <input type="tel" id="phone" name="phone" placeholder="0901234567">
+                    <span class="error-message" id="phoneError"></span>
+                </div>
+
+                <!-- Địa chỉ -->
+                <div class="form-group">
+                    <label for="address">Địa chỉ <span class="required">*</span></label>
+                    <input type="text" id="address" name="address" placeholder="Số nhà, đường, phường/xã, quận/huyện">
+                    <span class="error-message" id="addressError"></span>
+                </div>
+
+                <!-- Loại nhu cầu -->
+                <div class="form-group">
+                    <label for="type">Loại nhu cầu <span class="required">*</span></label>
+                    <select id="type" name="type">
+                        <option value="">-- Chọn loại nhu cầu --</option>
+                        <option value="y-te">🏥 Y tế</option>
+                        <option value="thuc-pham">🍚 Thực phẩm</option>
+                        <option value="noi-o">🏠 Nơi ở</option>
+                    </select>
+                    <span class="error-message" id="typeError"></span>
+                </div>
+
+                <!-- Ghi chú -->
+                <div class="form-group">
+                    <label for="note">Ghi chú</label>
+                    <textarea id="note" name="note" rows="3" placeholder="Mô tả chi tiết tình trạng cần hỗ trợ..."></textarea>
+                    <span class="error-message" id="noteError"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-submit">
+                    🚀 Gửi yêu cầu cứu trợ
+                </button>
+            </form>
+        </section>
+
+        <!-- ===== PHẦN 2: DANH SÁCH YÊU CẦU ===== -->
+        <section class="section list-section">
+            <h2 class="section-title">📋 Danh sách yêu cầu cứu trợ</h2>
+
+            <!-- Bộ lọc trạng thái -->
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">Tất cả</button>
+                <button class="filter-btn" data-filter="pending">⏳ Đang chờ</button>
+                <button class="filter-btn" data-filter="helped">✅ Đã được giúp</button>
+            </div>
+
+            <!-- Grid danh sách thẻ -->
+            <div class="requests-grid" id="requestsGrid">
+                <!-- Các thẻ sẽ được render bởi JS -->
+            </div>
+
+            <!-- Thông báo rỗng -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <span class="empty-icon">📭</span>
+                <p>Chưa có yêu cầu cứu trợ nào.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===== FOOTER (đồng bộ với index.html) ===== -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 Bản đồ Cứu trợ & Kết nối Cộng đồng. Được xây dựng với ❤️ vì cộng đồng.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/requests.js"></script>
+
+</body>
+</html>
