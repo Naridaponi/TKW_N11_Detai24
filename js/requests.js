@@ -1,325 +1,328 @@
-// ============================================================
-// js/requests.js
-// Xử lý logic cho trang Yêu cầu Cứu trợ
-// Phụ thuộc: js/data.js (getRequests, saveRequests, getTypeLabel, getStatusLabel)
-// ============================================================
+/**
+ * js/requests.js - Xử lý Validation Form và Render Danh Sách Yêu Cầu Cứu Trợ
+ * Dự án: Bản đồ Cứu trợ & Kết nối Cộng đồng (Community Rescue Map)
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. DOM Elements của Form gửi yêu cầu
+    const form = document.getElementById('newRescueForm');
+    const nameInput = document.getElementById('reqName');
+    const phoneInput = document.getElementById('reqPhone');
+    const typeSelect = document.getElementById('reqType');
+    const addressInput = document.getElementById('reqAddress');
+    const noteTextarea = document.getElementById('reqNote');
 
-    // ========== THAM CHIẾU DOM ==========
-    const requestForm    = document.getElementById('requestForm');
-    const requestsGrid   = document.getElementById('requestsGrid');
-    const emptyState     = document.getElementById('emptyState');
-    const filterButtons  = document.querySelectorAll('.filter-btn');
-    const navbarToggle   = document.getElementById('navbarToggle');
-    const navbarNav      = document.querySelector('.navbar-nav');
+    // Các thẻ hiển thị lỗi trực tiếp dưới ô nhập
+    const nameError = document.getElementById('nameError');
+    const phoneError = document.getElementById('phoneError');
+    const typeError = document.getElementById('typeError');
+    const addressError = document.getElementById('addressError');
+    const noteError = document.getElementById('noteError');
 
-    // Trạng thái lọc hiện tại
-    let currentFilter = 'all';
+    // Banner thông báo thành công
+    const formSuccessBanner = document.getElementById('formSuccessBanner');
+    const closeSuccessBanner = document.getElementById('closeSuccessBanner');
+    const successMsgDetail = document.getElementById('successMsgDetail');
 
-    // ========== NAVBAR TOGGLE (mobile) ==========
-    if (navbarToggle && navbarNav) {
-        navbarToggle.addEventListener('click', () => {
-            navbarNav.classList.toggle('open');
+    // DOM Elements của Danh sách yêu cầu & Bộ lọc
+    const cardsContainer = document.getElementById('requestsCardsContainer');
+    const displayCountBadge = document.getElementById('displayCountBadge');
+    const filterButtons = document.querySelectorAll('.filter-pill-btn');
+
+    let currentFilter = 'all'; // 'all' | 'dang-cho' | 'da-giup'
+
+    // =========================================================================
+    // PHẦN 1: RENDER DANH SÁCH YÊU CẦU CỨU TRỢ (DÙNG .filter() VÀ .map())
+    // =========================================================================
+
+    /**
+     * Lấy class viền màu trên đầu card theo loại nhu cầu
+     */
+    function getCardBorderClass(type) {
+        switch (type) {
+            case 'y-te': return 'border-medical';
+            case 'thuc-pham': return 'border-food';
+            case 'noi-o': return 'border-shelter';
+            default: return '';
+        }
+    }
+
+    /**
+     * Lấy biểu tượng theo loại nhu cầu
+     */
+    function getTypeIcon(type) {
+        switch (type) {
+            case 'y-te': return '🩺';
+            case 'thuc-pham': return '🍞';
+            case 'noi-o': return '🏠';
+            default: return '📍';
+        }
+    }
+
+    /**
+     * Hàm render danh sách yêu cầu cứu trợ:
+     * - Dùng .filter() để lọc theo trạng thái ('Tất cả' / 'Đang chờ' / 'Đã được giúp')
+     * - Dùng .map() để đổ dữ liệu thành các thẻ Cards
+     */
+    function renderRequestsList() {
+        const requests = getRequests();
+
+        // [YÊU CẦU]: Bộ lọc trạng thái dùng hàm .filter()
+        const filteredRequests = requests.filter(req => {
+            if (currentFilter === 'all') return true;
+            return req.status === currentFilter;
         });
-    }
 
-    // ============================================================
-    // 1. RENDER DANH SÁCH THẺ (CARDS)
-    // ============================================================
+        // Cập nhật số lượng hiển thị
+        displayCountBadge.textContent = `${filteredRequests.length} yêu cầu`;
 
-    /**
-     * Lấy class màu cho badge loại nhu cầu
-     * @param {string} type - Mã loại (y-te, thuc-pham, noi-o)
-     * @returns {string} CSS class
-     */
-    function getTypeBadgeClass(type) {
-        const map = {
-            'y-te':      'badge-yte',
-            'thuc-pham': 'badge-thucpham',
-            'noi-o':     'badge-noio'
-        };
-        return map[type] || 'badge-default';
-    }
-
-    /**
-     * Lấy class màu cho badge trạng thái
-     * @param {string} status - Mã trạng thái (pending, helped)
-     * @returns {string} CSS class
-     */
-    function getStatusBadgeClass(status) {
-        const map = {
-            'pending': 'badge-pending',
-            'helped':  'badge-helped'
-        };
-        return map[status] || 'badge-default';
-    }
-
-    /**
-     * Lấy emoji cho loại nhu cầu
-     */
-    function getTypeEmoji(type) {
-        const map = {
-            'y-te':      '🏥',
-            'thuc-pham': '🍚',
-            'noi-o':     '🏠'
-        };
-        return map[type] || '📌';
-    }
-
-    /**
-     * Render danh sách yêu cầu dựa trên bộ lọc hiện tại
-     */
-    function renderRequests() {
-        const allRequests = getRequests();
-
-        // Áp dụng .filter() theo trạng thái
-        const filtered = currentFilter === 'all'
-            ? allRequests
-            : allRequests.filter(req => req.status === currentFilter);
-
-        // Nếu không có dữ liệu → hiện empty state
-        if (filtered.length === 0) {
-            requestsGrid.innerHTML = '';
-            emptyState.style.display = 'flex';
+        // Nếu danh sách trống
+        if (filteredRequests.length === 0) {
+            cardsContainer.innerHTML = `
+                <div class="empty-requests-notice">
+                    <span>🔍</span>
+                    <h3 style="color: var(--text-primary); font-size: 1.15rem; margin-bottom: 0.25rem;">Không có yêu cầu cứu trợ nào phù hợp</h3>
+                    <p style="font-size: 0.9rem;">Hãy chọn trạng thái khác hoặc gửi yêu cầu cứu trợ mới ở khung phía trên.</p>
+                </div>
+            `;
             return;
         }
 
-        emptyState.style.display = 'none';
-
-        // Dùng .map() để đổ dữ liệu thành HTML cards
-        requestsGrid.innerHTML = filtered.map(req => {
-            const typeLabel   = getTypeLabel(req.type);
-            const statusLabel = getStatusLabel(req.status);
-            const typeBadge   = getTypeBadgeClass(req.type);
+        // [YÊU CẦU]: Dùng hàm .map() để đổ dữ liệu thành các Card hiển thị nhãn màu và SĐT bấm gọi được
+        const cardsHTML = filteredRequests.map(req => {
+            const cleanPhone = req.phone.replace(/\s+/g, '');
+            const borderClass = getCardBorderClass(req.type);
+            const typeBadge = getTypeBadgeClass(req.type);
             const statusBadge = getStatusBadgeClass(req.status);
-            const typeEmoji   = getTypeEmoji(req.type);
-
-            // Format ngày tạo
-            const createdDate = req.createdAt
-                ? new Date(req.createdAt).toLocaleDateString('vi-VN', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                  })
-                : 'Không rõ';
 
             return `
-                <div class="request-card">
-                    <div class="card-header">
-                        <span class="badge ${typeBadge}">${typeEmoji} ${typeLabel}</span>
-                        <span class="badge ${statusBadge}">${statusLabel}</span>
-                    </div>
-                    <div class="card-body">
-                        <h3 class="card-name">👤 ${escapeHtml(req.name)}</h3>
-                        <p class="card-address">📍 ${escapeHtml(req.address)}</p>
-                        <p class="card-phone">
-                            📞 <a href="tel:${escapeHtml(req.phone)}" class="phone-link">${escapeHtml(req.phone)}</a>
+                <article class="rescue-request-card ${borderClass}" id="card-${req.id}">
+                    <div>
+                        <div class="card-top-header">
+                            <span class="card-req-id">${req.id}</span>
+                            <div class="card-badges-wrapper">
+                                <!-- Nhãn màu theo loại nhu cầu -->
+                                <span class="badge ${typeBadge}">
+                                    ${getTypeIcon(req.type)} ${getTypeLabel(req.type)}
+                                </span>
+                                <!-- Nhãn màu theo trạng thái -->
+                                <span class="badge ${statusBadge}">
+                                    ${getStatusLabel(req.status)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <h3 class="card-person-name">${escapeHTML(req.name)}</h3>
+
+                        <p class="card-address-line">
+                            <span>📍</span>
+                            <span>${escapeHTML(req.address)}</span>
                         </p>
-                        ${req.note ? `<p class="card-note">📝 ${escapeHtml(req.note)}</p>` : ''}
+
+                        <div class="card-note-box">
+                            "${escapeHTML(req.note)}"
+                        </div>
                     </div>
-                    <div class="card-footer">
-                        <span class="card-date">🕐 ${createdDate}</span>
+
+                    <div class="card-footer-box">
+                        <!-- Số điện thoại bấm gọi được (<a href="tel:...">) -->
+                        <a href="tel:${cleanPhone}" class="card-phone-btn" title="Gọi điện trực tiếp cho người cần giúp">
+                            📞 ${escapeHTML(req.phone)}
+                        </a>
+
+                        <span class="card-coords-tag" title="Tọa độ hiển thị trên bản đồ mô phỏng">
+                            🗺️ (${req.coords.top}%, ${req.coords.left}%)
+                        </span>
                     </div>
-                </div>
+                </article>
             `;
         }).join('');
+
+        cardsContainer.innerHTML = cardsHTML;
     }
 
     /**
-     * Escape HTML để chống XSS
+     * Xử lý click các nút lọc trạng thái ('Tất cả / Đang chờ / Đã được giúp')
      */
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ============================================================
-    // 2. BỘ LỌC TRẠNG THÁI (dùng .filter())
-    // ============================================================
-
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Cập nhật trạng thái active
             filterButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // Lưu bộ lọc và render lại
             currentFilter = btn.dataset.filter;
-            renderRequests();
+            renderRequestsList();
         });
     });
 
-    // ============================================================
-    // 3. FORM GỬI YÊU CẦU MỚI + VALIDATION
-    // ============================================================
+    // =========================================================================
+    // PHẦN 2: VALIDATION FORM GỬI YÊU CẦU CỨU TRỢ MỚI
+    // =========================================================================
 
     /**
-     * Xóa tất cả thông báo lỗi
+     * Xóa thông báo lỗi và viền đỏ của một ô nhập liệu
      */
-    function clearErrors() {
-        document.querySelectorAll('.error-message').forEach(el => {
-            el.textContent = '';
-            el.style.display = 'none';
-        });
-        document.querySelectorAll('.form-group').forEach(el => {
-            el.classList.remove('has-error');
-        });
+    function clearFieldError(inputEl, errorEl) {
+        inputEl.classList.remove('has-error');
+        errorEl.textContent = '';
     }
 
     /**
-     * Hiển thị lỗi ngay dưới ô nhập
-     * @param {string} fieldId - ID của ô input
-     * @param {string} message - Nội dung lỗi
+     * Đặt thông báo lỗi màu đỏ trực tiếp dưới ô nhập liệu (Không dùng alert())
      */
-    function showError(fieldId, message) {
-        const errorEl = document.getElementById(fieldId + 'Error');
-        const inputEl = document.getElementById(fieldId);
-        if (errorEl) {
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
-        }
-        if (inputEl) {
-            inputEl.closest('.form-group').classList.add('has-error');
-        }
+    function setFieldError(inputEl, errorEl, message) {
+        inputEl.classList.add('has-error');
+        errorEl.textContent = `⚠️ ${message}`;
     }
 
     /**
-     * Kiểm tra dữ liệu form (Validation)
-     * @returns {boolean} true nếu hợp lệ
+     * Lắng nghe sự kiện input/change để xóa lỗi ngay khi người dùng bắt đầu nhập lại
      */
-    function validateForm() {
-        clearErrors();
+    nameInput.addEventListener('input', () => clearFieldError(nameInput, nameError));
+    phoneInput.addEventListener('input', () => clearFieldError(phoneInput, phoneError));
+    typeSelect.addEventListener('change', () => clearFieldError(typeSelect, typeError));
+    addressInput.addEventListener('input', () => clearFieldError(addressInput, addressError));
+    noteTextarea.addEventListener('input', () => clearFieldError(noteTextarea, noteError));
+
+    /**
+     * Xử lý Submit Form bằng event.preventDefault() và kiểm tra Validation
+     */
+    form.addEventListener('submit', (e) => {
+        // [YÊU CẦU]: Dùng event.preventDefault() để ngăn hành vi submit mặc định của trình duyệt
+        e.preventDefault();
+
+        // 1. Thu thập dữ liệu từ các ô nhập
+        const nameVal = nameInput.value.trim();
+        const phoneVal = phoneInput.value.trim();
+        const typeVal = typeSelect.value;
+        const addressVal = addressInput.value.trim();
+        const noteVal = noteTextarea.value.trim();
+
         let isValid = true;
+        let firstInvalidElement = null;
 
-        // Lấy giá trị
-        const fullName = document.getElementById('fullName').value.trim();
-        const phone    = document.getElementById('phone').value.trim();
-        const address  = document.getElementById('address').value.trim();
-        const type     = document.getElementById('type').value;
-
-        // Kiểm tra Họ tên — không được bỏ trống
-        if (!fullName) {
-            showError('fullName', 'Vui lòng nhập họ và tên.');
+        // 2. Kiểm tra Họ tên: Không được bỏ trống
+        if (!nameVal) {
+            setFieldError(nameInput, nameError, 'Họ và tên không được bỏ trống.');
             isValid = false;
+            if (!firstInvalidElement) firstInvalidElement = nameInput;
+        } else {
+            clearFieldError(nameInput, nameError);
         }
 
-        // Kiểm tra SĐT: đúng 10 chữ số, bắt đầu bằng 0 (Regex)
-        const phoneRegex = /^0\d{9}$/;
-        if (!phone) {
-            showError('phone', 'Vui lòng nhập số điện thoại.');
+        // 3. [YÊU CẦU]: SĐT phải đúng 10 chữ số bắt đầu bằng số 0 (Dùng Regex: /^0[0-9]{9}$/)
+        const phoneRegex = /^0[0-9]{9}$/;
+        if (!phoneVal) {
+            setFieldError(phoneInput, phoneError, 'Số điện thoại không được bỏ trống.');
             isValid = false;
-        } else if (!phoneRegex.test(phone)) {
-            showError('phone', 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.');
+            if (!firstInvalidElement) firstInvalidElement = phoneInput;
+        } else if (!phoneRegex.test(phoneVal)) {
+            setFieldError(phoneInput, phoneError, 'Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0 (Ví dụ: 0912345678).');
             isValid = false;
+            if (!firstInvalidElement) firstInvalidElement = phoneInput;
+        } else {
+            clearFieldError(phoneInput, phoneError);
         }
 
-        // Kiểm tra Địa chỉ — không được bỏ trống
-        if (!address) {
-            showError('address', 'Vui lòng nhập địa chỉ.');
+        // 4. Kiểm tra Loại nhu cầu: Không được bỏ trống
+        if (!typeVal) {
+            setFieldError(typeSelect, typeError, 'Vui lòng chọn loại nhu cầu cứu trợ.');
             isValid = false;
+            if (!firstInvalidElement) firstInvalidElement = typeSelect;
+        } else {
+            clearFieldError(typeSelect, typeError);
         }
 
-        // Kiểm tra Loại nhu cầu — phải chọn
-        if (!type) {
-            showError('type', 'Vui lòng chọn loại nhu cầu.');
+        // 5. Kiểm tra Địa chỉ: Không được bỏ trống
+        if (!addressVal) {
+            setFieldError(addressInput, addressError, 'Địa chỉ cụ thể tại Đồng Nai không được bỏ trống.');
             isValid = false;
+            if (!firstInvalidElement) firstInvalidElement = addressInput;
+        } else {
+            clearFieldError(addressInput, addressError);
         }
 
-        return isValid;
-    }
+        // 6. Kiểm tra Ghi chú: Không được bỏ trống
+        if (!noteVal) {
+            setFieldError(noteTextarea, noteError, 'Ghi chú tình trạng không được bỏ trống để đội cứu trợ nắm bắt.');
+            isValid = false;
+            if (!firstInvalidElement) firstInvalidElement = noteTextarea;
+        } else {
+            clearFieldError(noteTextarea, noteError);
+        }
 
-    /**
-     * Tạo tọa độ ngẫu nhiên trong khung bản đồ (20% – 80%)
-     * @returns {{ x: number, y: number }}
-     */
-    function generateRandomCoords() {
-        // Tạo giá trị từ 20% đến 80% (phạm vi 60%, offset 20%)
-        const x = Math.random() * 60 + 20; // 20 – 80
-        const y = Math.random() * 60 + 20; // 20 – 80
-        return {
-            x: parseFloat(x.toFixed(2)),
-            y: parseFloat(y.toFixed(2))
-        };
-    }
-
-    // Xử lý submit form
-    requestForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-
-        // Validate
-        if (!validateForm()) {
+        // Nếu có trường sai dữ liệu: Đưa con trỏ chuột vào ô sai đầu tiên và dừng (Không dùng alert())
+        if (!isValid) {
+            if (firstInvalidElement) firstInvalidElement.focus();
             return;
         }
 
-        // Lấy dữ liệu
-        const fullName = document.getElementById('fullName').value.trim();
-        const phone    = document.getElementById('phone').value.trim();
-        const address  = document.getElementById('address').value.trim();
-        const type     = document.getElementById('type').value;
-        const note     = document.getElementById('note').value.trim();
+        // 7. [YÊU CẦU]: TẠO TỌA ĐỘ NGẪU NHIÊN TRONG KHUNG BẢN ĐỒ (20% – 80%)
+        // Công thức ngẫu nhiên: Math.random() * (max - min) + min
+        const randomTop = +(Math.random() * (80 - 20) + 20).toFixed(1);
+        const randomLeft = +(Math.random() * (80 - 20) + 20).toFixed(1);
 
-        // Tạo tọa độ ngẫu nhiên
-        const coords = generateRandomCoords();
+        // Tạo mã ID duy nhất
+        const newId = `REQ-${String(Date.now()).slice(-4)}`;
 
-        // Tạo object yêu cầu mới
+        // Tạo đối tượng yêu cầu mới
         const newRequest = {
-            id: Date.now(),                // ID duy nhất
-            name: fullName,
-            phone: phone,
-            address: address,
-            type: type,                    // 'y-te' | 'thuc-pham' | 'noi-o'
-            note: note,
-            status: 'pending',             // Mặc định: Đang chờ
-            coords: coords,               // { x, y } trong khung bản đồ
-            createdAt: new Date().toISOString()
+            id: newId,
+            name: nameVal,
+            phone: phoneVal,
+            address: addressVal,
+            type: typeVal,
+            status: 'dang-cho', // Mặc định trạng thái là Đang chờ
+            note: noteVal,
+            coords: {
+                top: randomTop,
+                left: randomLeft
+            }
         };
 
-        // Lưu vào localStorage
+        // 8. [YÊU CẦU]: LƯU VÀO LOCALSTORAGE BẰNG saveRequests()
         const requests = getRequests();
-        requests.push(newRequest);
+        requests.unshift(newRequest); // Thêm lên đầu danh sách để thấy ngay lập tức
         saveRequests(requests);
 
-        // Reset form
-        requestForm.reset();
-        clearErrors();
+        // 9. [YÊU CẦU]: CẬP NHẬT DANH SÁCH NGAY LẬP TỨC
+        renderRequestsList();
 
-        // Hiển thị thông báo thành công
-        showSuccessMessage();
+        // 10. Reset Form và hiển thị thông báo thành công
+        form.reset();
+        successMsgDetail.textContent = `Yêu cầu #${newId} của bạn đã được ghi nhận tại tọa độ ngẫu nhiên (${randomTop}%, ${randomLeft}%). Đội cứu trợ sẽ liên hệ theo SĐT ${phoneVal}.`;
+        formSuccessBanner.style.display = 'flex';
 
-        // Cập nhật danh sách ngay lập tức
-        renderRequests();
+        // Cuộn mượt đến vị trí thẻ vừa tạo
+        setTimeout(() => {
+            const newCard = document.getElementById(`card-${newId}`);
+            if (newCard) {
+                newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                newCard.style.outline = '2px solid var(--color-primary)';
+                newCard.style.boxShadow = '0 0 15px rgba(30, 58, 138, 0.25)';
+            }
+        }, 300);
     });
 
-    /**
-     * Hiển thị thông báo thành công tạm thời
-     */
-    function showSuccessMessage() {
-        // Xóa thông báo cũ nếu có
-        const existing = document.querySelector('.success-toast');
-        if (existing) existing.remove();
-
-        const toast = document.createElement('div');
-        toast.className = 'success-toast';
-        toast.innerHTML = '✅ Gửi yêu cầu cứu trợ thành công!';
-        document.body.appendChild(toast);
-
-        // Trigger animation
-        requestAnimationFrame(() => {
-            toast.classList.add('show');
+    // Đóng banner thông báo thành công
+    if (closeSuccessBanner) {
+        closeSuccessBanner.addEventListener('click', () => {
+            formSuccessBanner.style.display = 'none';
         });
-
-        // Tự động ẩn sau 3 giây
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
     }
 
-    // ============================================================
-    // 4. KHỞI TẠO
-    // ============================================================
+    /**
+     * Hàm phòng ngừa tấn công XSS khi render dữ liệu
+     */
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 
-    renderRequests();
+    // Khởi tạo hiển thị danh sách ban đầu khi tải trang
+    renderRequestsList();
 });
